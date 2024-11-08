@@ -2,6 +2,7 @@ package user
 
 import (
 	"awesomeProject/internal/hendlers"
+	"awesomeProject/pkg/logging"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
@@ -14,14 +15,17 @@ const (
 )
 
 type handler struct {
+	logger logging.Logger
 }
 
-func NewHandler() hendlers.Hendler {
-	return &handler{}
+func NewHandler(logger logging.Logger) hendlers.Hendler {
+	return &handler{
+		logger: logger,
+	}
 }
 
 func (h *handler) Register(router *httprouter.Router) {
-	router.GET(usersURL, h.GetList)
+	router.HandlerFunc(http.MethodGet, usersURL, h.GetList)
 	router.POST(usersURL, h.CreateUser)
 	router.GET(userURL, h.CreateUserByUUID)
 	router.PUT(userURL, h.UpdateUser)
@@ -29,7 +33,7 @@ func (h *handler) Register(router *httprouter.Router) {
 	router.DELETE(userURL, h.DeleteUser)
 }
 
-func (h *handler) GetList(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (h *handler) GetList(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	w.Write([]byte("this is a list of user GetList"))
 }

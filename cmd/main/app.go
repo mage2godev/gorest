@@ -2,21 +2,22 @@ package main
 
 import (
 	"awesomeProject/internal/user"
+	"awesomeProject/pkg/logging"
 	"github.com/julienschmidt/httprouter"
-	"log"
 	"net"
 	"net/http"
 	"time"
 )
 
 func main() {
-	log.Println("Create router")
+	logger := logging.GetLogger()
+	logger.Info("Create router")
 
 	router := httprouter.New()
 
-	log.Println("register logger handler")
+	logger.Info("register logger handler")
 
-	handler := user.NewHandler()
+	handler := user.NewHandler(logger)
 
 	handler.Register(router)
 
@@ -24,7 +25,8 @@ func main() {
 }
 
 func start(router *httprouter.Router) {
-	log.Println("start server application")
+	logger := logging.GetLogger()
+	logger.Info("start server application")
 
 	listener, err := net.Listen("tcp", "127.0.0.1:1234")
 	if err != nil {
@@ -36,6 +38,6 @@ func start(router *httprouter.Router) {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	log.Println("server is listening 127.0.0.1:1234")
-	log.Fatalln(server.Serve(listener))
+	logger.Info("server is listening 127.0.0.1:1234")
+	logger.Fatal(server.Serve(listener))
 }
