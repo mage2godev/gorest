@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"awesomeProject/internal/user"
 	"github.com/julienschmidt/httprouter"
 	"log"
 	"net"
@@ -9,16 +9,24 @@ import (
 	"time"
 )
 
-func IndexHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	name := params.ByName("name")
-	w.Write([]byte(fmt.Sprintf("Hello %s", name)))
-}
 func main() {
+	log.Println("Create router")
+
 	router := httprouter.New()
-	router.GET("/:name", IndexHandler)
+
+	log.Println("register logger handler")
+
+	handler := user.NewHandler()
+
+	handler.Register(router)
+
+	start(router)
+}
+
+func start(router *httprouter.Router) {
+	log.Println("start server application")
 
 	listener, err := net.Listen("tcp", "127.0.0.1:1234")
-
 	if err != nil {
 		panic(err)
 	}
@@ -28,6 +36,6 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-
+	log.Println("server is listening 127.0.0.1:1234")
 	log.Fatalln(server.Serve(listener))
 }
