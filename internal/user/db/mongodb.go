@@ -1,6 +1,7 @@
 package db
 
 import (
+	"awesomeProject/internal/apperror"
 	"awesomeProject/internal/user"
 	"awesomeProject/pkg/logging"
 	"context"
@@ -42,8 +43,7 @@ func (d *db) FindOne(ctx context.Context, id string) (u user.User, err error) {
 	result := d.collection.FindOne(ctx, filter)
 	if result.Err() != nil {
 		if errors.Is(result.Err(), mongo.ErrNilDocument) {
-			//todo
-			return u, fmt.Errorf("user not found")
+			return u, apperror.ErrNotFound
 		}
 		return u, fmt.Errorf("failed to decode user by (id:%s): due to error %v", id, err)
 	}
@@ -96,8 +96,7 @@ func (d *db) Update(ctx context.Context, user user.User) error {
 		return fmt.Errorf("failed to update user object. %v", err)
 	}
 	if result.MatchedCount == 0 {
-		//todo error not found
-		return fmt.Errorf("user object not found")
+		return apperror.ErrNotFound
 	}
 
 	d.logger.Tracef("matched %d documants and Modified %d documents", result.MatchedCount, result.ModifiedCount)
@@ -115,8 +114,7 @@ func (d *db) Delete(ctx context.Context, id string) error {
 		return fmt.Errorf("failed to delete user object. %v", err)
 	}
 	if result.DeletedCount == 0 {
-		//todo error not found
-		return fmt.Errorf("user object not found")
+		return apperror.ErrNotFound
 	}
 	d.logger.Tracef("deleted %d documents", result.DeletedCount)
 
