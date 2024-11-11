@@ -2,8 +2,9 @@ package mongodb
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func NewClient(ctx context.Context, host, port, username, password, database, authDB string) (db *mongo.Client, err error) {
@@ -11,27 +12,35 @@ func NewClient(ctx context.Context, host, port, username, password, database, au
 	var mongoDBURL string
 	var isAuth bool
 	if username == "" || password == "" {
-		mongoDBURL = "mongodb://%s:%s"
+		mongoDBURL = fmt.Sprintf("mongodb://%s:%s", host, port)
 	} else {
-		isAuth
-		mongoDBURL := "mongodb://%s:%s@%s:%s"
+		isAuth = true
+		mongoDBURL = fmt.Sprintf("mongodb://%s:%s@%s:%s", username, password, host, port)
 	}
 
+	clientOptions := options.Client().ApplyURI(mongoDBURL)
 	if isAuth {
 		if authDB == "" {
 			authDB = database
 		}
-		clientOptions := options.Client().ApplyURI(mongoDBURL).SetAuth(options.Credential{
+		clientOptions.SetAuth(options.Credential{
 			AuthSource: authDB,
 			Username:   username,
 			Password:   password,
 		})
 	}
-	clientOptions := options.Client().ApplyURI(mongoDBURL)
 
-	//Connect 10:50
+	client, err := mongo.Connect(
+		ctx,
+		clientOptions,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to MongoDB: %v", err)
+	}
 
-	//Ping
+	if err = client.Ping(ctx, nil); err != nil {
+		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
+	}
 
-	return db, err
+	return client.Database(database).Client(), nil
 }
